@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Awesome To-Do List</title>
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2b2b2b;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Floating Text Styles */
+        .floating-text {
+            position: absolute;
+            font-size: 48px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.5);
+            animation: float 5s ease-in-out, settle 10s ease-in-out forwards;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(-20px);
+            }
+
+            50% {
+                transform: translateY(20px);
+            }
+        }
+
+        @keyframes settle {
+            0% {
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            100% {
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Snowflakes Styles */
+        .snowflake {
+            position: absolute;
+            color: #fff;
+            font-size: 12px;
+            top: -10px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh);
+            }
+        }
+
+        /* To-Do Container Styles */
+        .todo-container {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 300px;
+            z-index: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .todo-container h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        /* Input Section Styles */
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #28a745;
+            border-radius: 4px;
+        }
+
+        .input-container input:focus {
+            border: 2px solid #28a745;
+            outline: none;
+        }
+
+        .input-container button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .input-container button:hover {
+            background-color: #218838;
+        }
+
+        /* Clear Button Styles */
+        .clear-btn {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .clear-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Task List Styles */
+        ul {
+            list-style: none;
+            padding: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        ul li {
+            background: #444;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            animation: taskAnimation 0.5s ease-out;
+        }
+
+        @keyframes taskAnimation {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        ul li button {
+            background: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        ul li button.complete {
+            background: #28a745;
+        }
+
+        ul li button.edit {
+            background: #ffc107;
+        }
+
+        ul li button:hover {
+            opacity: 0.9;
+        }
+
+        ul li.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="floatingText" class="floating-text">NOSAKHARE DIVINE</div>
+    <div id="snowflakes"></div>
+
+    <div class="todo-container">
+        <h1>To-Do List</h1>
+
+        <!-- Task Input Section -->
+        <div class="input-container">
+            <input type="text" id="taskInput" placeholder="Add a new task">
+            <button onclick="addTask()">Add</button>
+        </div>
+
+        <!-- Task List -->
+        <ul id="taskList"></ul>
+
+        <!-- Clear All Tasks Button -->
+        <button class="clear-btn" onclick="clearAllTasks()">Clear All Tasks</button>
+    </div>
+
+    <script>
+        // Load tasks from local storage
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            tasks.forEach(task => {
+                createTaskElement(task.text, task.completed);
+            });
+        }
+
+        // Create task element
+        function createTaskElement(taskText, isCompleted = false) {
+            const taskList = document.getElementById('taskList');
+            const listItem = document.createElement('li');
+
+            listItem.textContent = taskText;
+            if (isCompleted) {
+                listItem.classList.add('completed');
+            }
+
+            const completeButton = document.createElement('button');
+            completeButton.textContent = 'Complete';
+            completeButton.classList.add('complete');
+            completeButton.onclick = function () {
+                toggleComplete(taskText);
+            };
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.classList.add('edit');
+            editButton.onclick = function () {
+                editTask(taskText);
+            };
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function () {
+                removeTask(taskText);
+            };
+
+            listItem.appendChild(completeButton);
+            listItem.appendChild(editButton);
+            listItem.appendChild(deleteButton);
+            taskList.appendChild(listItem);
+        }
+
+        // Save a new task to local storage
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const taskText = taskInput.value.trim();
+
+            if (taskText === '') {
+                alert('Please enter a task!');
+                return;
+            }
+
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push({ text: taskText, completed: false });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            loadTasks();
+            taskInput.value = '';
+        }
+
+        // Remove a task from local storage
+        function removeTask(taskText) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.filter(task => task.text !== taskText);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            loadTasks();
+        }
+
+        // Toggle task completion
+        function toggleComplete(taskText) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.map(task =>
+                task.text === taskText ? { ...task, completed: !task.completed } : task
+            );
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            loadTasks();
+        }
+
+        // Edit a task
+        function editTask(taskText) {
+            const newTaskText = prompt('Edit your task:', taskText);
+            if (newTaskText === null || newTaskText.trim() === '') return;
+
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.map(task =>
+                task.text === taskText ? { ...task, text: newTaskText } : task
+            );
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            loadTasks();
+        }
+
+        // Clear all tasks
+        function clearAllTasks() {
+            localStorage.removeItem('tasks');
+            loadTasks();
+        }
+
+        // Generate snowflakes
+        function generateSnowflakes() {
+            const snowflakesContainer = document.getElementById('snowflakes');
+            for (let i = 0; i < 25; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = '❄';
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                snowflake.style.animationDuration = Math.random() * .5 + 2 + 's';
+                snowflake.style.fontSize = Math.random() * 5 + 3 + 'px';
+                snowflakesContainer.appendChild(snowflake);
+
+                // Remove snowflakes when animation ends
+                snowflake.addEventListener('animationend', () => {
+                    snowflakesContainer.removeChild(snowflake);
+                });
+            }
+        }
+
+        // Run the snowflake generator
+        setInterval(generateSnowflakes, 500);
+
+        // Initialize the app
+        loadTasks();
+    </script>
+</body>
+
+</html>
